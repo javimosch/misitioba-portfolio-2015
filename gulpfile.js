@@ -61,12 +61,16 @@ try {
     }
 
     var DATA_PATHS = [
-        './src/assets/accrocs/_accrocs.js'
+        //'./src/assets/accrocs/_accrocs.js'
     ];
 
+    var DIST_RES = 'dist/portfolio';
+    var DIST_JS = 'dist/portfolio';
+    var DIST_STYLES = 'dist/portfolio';
+    var ROOT = '/portfolio/';
 
     var GLOBALS = {
-        '_G_ROOT': '/',
+        '_G_ROOT': ROOT,
     };
 
     var events = {
@@ -84,7 +88,7 @@ try {
     var btoa = require('btoa');
     var uridecode = require('uridecode');
     var jadeLocals = {
-        basedir: 'src/assets/views',
+        basedir: 'src/partials',
         window: {
             atob: atob,
             btoa: btoa,
@@ -95,7 +99,7 @@ try {
             return markdown.toHTML(decoded);
         },
         self: {
-            root: '/' //ver elimianr referencias
+            root: ROOT //ver elimianr referencias
         }
     };
 
@@ -155,7 +159,7 @@ try {
         },
         compileResources: function() {
             return gulp.src(resSrc)
-                .pipe(gulp.dest('dist'))
+                .pipe(gulp.dest(DIST_RES))
                 .pipe(gulpif(!isProduction, browserSync.stream({
                     once: true
                 })));
@@ -177,7 +181,7 @@ try {
                 .pipe(gulpif(isProduction, cssnano()))
                 .pipe(gulpif(!isProduction, sourcemaps.write('.')))
                 .pipe(plumber.stop())
-                .pipe(gulp.dest('dist'))
+                .pipe(gulp.dest(DIST_STYLES))
                 .pipe(gulpif(!isProduction, browserSync.stream({
                     once: true
                 })));
@@ -235,7 +239,7 @@ try {
         server: function() {
             browserSync.init({
                 server: "./dist",
-                port: 3000,
+                port: 8080,
                 open: false
             });
         },
@@ -266,7 +270,7 @@ try {
         function createTask(opt) {
             var srcName = opt.src.toString().substr(opt.src.lastIndexOf('/') + 1);
             opt.rename = opt.rename || srcName;
-            opt.dist = opt.dist || 'dist';
+            opt.dist = opt.dist || DIST_JS;
             var bundler = watchify(browserify(opt.src, watchify.args));
             bundler.transform(babelify.configure({
                 sourceMapRelative: opt.src.substring(0, opt.src.lastIndexOf('/'))
@@ -282,7 +286,7 @@ try {
                     .pipe(source(srcName))
                     //.pipe(gulpif(isProduction, streamify(uglify())))
                     .pipe(gulpif(isProduction, streamify(minify())))
-                    .pipe(gulp.dest(opt.dist || 'dist'))
+                    .pipe(gulp.dest(opt.dist || DIST_JS))
                     .pipe(gulpif(!isProduction, browserSync.stream({
                         once: true
                     })));
@@ -349,7 +353,8 @@ try {
                     return function(relativePath) {
                         if (_langTaskInstance.isDefault()) {
                             return (_root + '/' + relativePath || '').replace('//', '/');
-                        } else {
+                        }
+                        else {
                             return (_root + '/' + _locals.lang.current() + '/' + relativePath || '').replace('//', '/');
                         }
                     };
@@ -384,7 +389,8 @@ try {
                             var _data = require(filePath);
                             //console.log('locals-extended: ' + Object.keys(_data));
                             _locals = _.extend(_locals, _data);
-                        } catch (e) {
+                        }
+                        catch (e) {
                             //console.log(path.basename(file.path) + ' (no-data)', e);
                             //handle(undefined, undefined);
                         }
@@ -418,8 +424,8 @@ try {
 
                 //r = r.pipe(plumber())
                 //r = r.pipe(gcallback(function() {
-                  //  gutil.log('language-reload');
-                    //_langTaskInstance.reload();
+                //  gutil.log('language-reload');
+                //_langTaskInstance.reload();
                 //}));
                 //r = r.pipe(plumber.stop())
 
@@ -429,13 +435,13 @@ try {
 
 
                 r = r.pipe(plumber())
-                //r = r.pipe(using({ prefix: "Copied: " }))
-                .pipe(rename(function(str) {
-                    str.dirname = str.dirname.replace('assets','');
-                    str.dirname = str.dirname.replace('//','/');
-                    console.log('Compiling '+str.dirname);
-                    return str;
-                }))
+                    //r = r.pipe(using({ prefix: "Copied: " }))
+                    .pipe(rename(function(str) {
+                        str.dirname = str.dirname.replace('assets', '');
+                        str.dirname = str.dirname.replace('//', '/');
+                        console.log('Compiling ' + str.dirname);
+                        return str;
+                    }))
                 r = r.pipe(plumber.stop())
                 r = r.pipe(gulp.dest(dest))
                     //.pipe(notify("[jade:success]"))
@@ -451,7 +457,7 @@ try {
             return task;
         }
 
-        
+
 
         function reload() {
             return through2(function(chunk, enc, callback) {
@@ -467,7 +473,8 @@ try {
                 _left = _.filter(_left, function(v) {
                     return v.indexOf('watch') !== -1;
                 });
-            } else {
+            }
+            else {
                 _left = _.filter(_left, function(v) {
                     return v.indexOf('watch') === -1;
                 });
@@ -478,7 +485,8 @@ try {
                     console.log('jade:finish:reload');
                     browserSync.reload();
                     cb && cb();
-                } else {
+                }
+                else {
                     console.log('jade:running:' + _left[0] + ':' + _left.length);
                     runSequence(_left[0], function() {
                         _left = _left.slice(1);
@@ -547,6 +555,34 @@ try {
     gulp.task('build', tasks.buildProd);
     gulp.task('build-static', tasks.buildStatic);
 
+    gulp.task('build-1', function(cb) {
+        runSequence(
+            'clean', 
+            'build:scripts-static',
+            'build:scripts',
+            'build:vendor-static',
+            'build:vendor',
+            'build:res',
+            //'build:assets',
+            //'build:styles', ['build:jade'],
+            function() {
+                cb();
+            });
+    });
+    gulp.task('build-2', function(cb) {
+        runSequence(
+            //'clean', 
+            //'build:scripts-static',
+            //'build:scripts',
+            //'build:vendor-static',
+            //'build:vendor',
+            'build:assets',
+            'build:styles', ['build:jade'],
+            function() {
+                cb();
+            });
+    });
+
     gulp.task('server', tasks.server);
     gulp.task('deploy', tasks.deploy);
     gulp.task('default', tasks.watch);
@@ -574,7 +610,8 @@ try {
         }
     });
 
-} catch (e) {
+}
+catch (e) {
     if (_spawnChildren) _spawnChildren();
     console.log('GLOBAL:ERROR', e);
 }

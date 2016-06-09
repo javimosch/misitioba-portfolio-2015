@@ -32,7 +32,7 @@
             "USER_EXISTS": "The user alredy exists",
             "FIELD_REQUIRED": "{1} is a field required.",
             "PAGE_SUBTITLE": "A personal space to develop creativity",
-            "SLIDER_1_HTML": "",
+            "SLIDER_1_HTML": "<br>Your web site is here</b>",
             "PROJECTS": "PROJECTS",
             "SECTION_ABOUT": "ABOUT",
             "GET_IN_TOUCH": "Get in touch",
